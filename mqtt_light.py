@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
+
 import paho.mqtt.client as mqtt
 import time
 import json
@@ -79,9 +83,28 @@ def destroy():
 
 
 if __name__ == '__main__':
-    loop()
-    #try:
-    #    loop()
-    #except:
-    #    destroy()
+    
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+	
+    formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s') 
+    file_handler = RotatingFileHandler( "activity.log", "a", 1000000, 1 )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    logger.addHandler(stream_handler)
+
+    logger.info("Start mqtt listner");
+
+    while True:
+        try:
+            loop()
+        except KeyboardInterrupt:
+            destroy()
+            sys.exit(0)
+        except:
+            logger.error("Error occured")
+            logger.error(sys.exc_info()[0])
